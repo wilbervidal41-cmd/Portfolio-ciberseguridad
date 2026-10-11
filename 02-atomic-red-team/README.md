@@ -1,25 +1,31 @@
-# 🎯 Homelab Blue Team — Proyecto 02: Simulación de ataques con Atomic Red Team y análisis de detección en Wazuh
+# 🎯 Proyecto 02 — Atomic Red Team: ¿qué detecta realmente mi SIEM?
 
-> **Portfolio de Ciberseguridad** | Wilber Vidal  
+> **Wilber Vidal** · Aspirante a Analista SOC / Blue Team  
 > Formación: CertiPlus Cybersecurity Expert · Beca Talento Digital (INDOTEL) · Diplomado en Ciberseguridad y Ciberdefensa (Ministerio de Defensa, Rep. Dom.)
 
 ---
 
-## 📋 Descripción
+## 🎯 Resumen
 
-Sobre el laboratorio del [Proyecto 01](../01-proxmox-wazuh/README.md) (Proxmox + Wazuh 4.14.8 + endpoint Windows 11), este proyecto responde a una pregunta típica de un analista SOC: **¿qué detecta realmente mi SIEM y qué se le escapa?**
+**Problema:** tener un SIEM no garantiza detectar ataques; hay que medir qué ve y qué se le escapa.  
+**Qué hice:** sobre el laboratorio del [Proyecto 01](../01-proxmox-wazuh/README.md), emulé **3 técnicas de MITRE ATT&CK** con Atomic Red Team en un endpoint Windows 11 y analicé, técnica por técnica, si Wazuh generaba alerta, con qué regla y con qué mapeo MITRE.  
+**Resultado:** **2 de 3 técnicas detectadas** (una de ellas tras corregir la auditoría de Windows, que era la causa real del fallo) y **1 brecha de detección documentada** con su causa raíz, que se aborda en el Proyecto 03 con reglas personalizadas.
 
-Para medirlo se ejecutan técnicas de ataque reales y controladas con **Atomic Red Team** (Red Canary) en la VM Windows y se revisa, técnica por técnica, si Wazuh genera una alerta, con qué regla y a qué táctica/técnica de **MITRE ATT&CK** la asocia.
+![Antes: sin detección](capturas/06-t1053-005-sin-deteccion.png)
+![Después: detectado tras habilitar la auditoría](capturas/09-wazuh-t1053-005-detectado.png)
 
-**Competencias que demuestra:**
-- Emulación de adversarios con Atomic Red Team
-- Mapeo de técnicas a MITRE ATT&CK
-- Análisis de brechas de detección (*detection gap analysis*)
-- Auditoría de Windows (`auditpol`) y registro de PowerShell (Script Block Logging)
-- Configuración del agente Wazuh (recolección de canales de eventos adicionales)
-- Triage de alertas y reconocimiento de falsos positivos
+> 🇬🇧 **English summary:** Emulated 3 MITRE ATT&CK techniques (T1136.001, T1053.005, T1059.001) with Atomic Red Team against a Windows 11 endpoint monitored by Wazuh. Two were detected (one only after fixing a disabled Windows audit policy); one is a documented rule gap: PowerShell script block events reach the manager but no default rule alerts on them. Includes root-cause analysis across the four layers of the pipeline (source, collection, transport, rules) and a false-positive investigation.
 
-> ⚠️ **Aviso:** las simulaciones se ejecutaron únicamente en una VM de laboratorio aislada, con snapshot previo en Proxmox. La exclusión de Windows Defender sobre `C:\AtomicRedTeam` es solo para el laboratorio y no debe replicarse en producción.
+## 💼 Qué demuestra
+
+| Competencia | Evidencia |
+|---|---|
+| Emulación de adversarios | Atomic Red Team: ejecución controlada y limpieza de técnicas ATT&CK |
+| MITRE ATT&CK | Mapeo de cada prueba a táctica y técnica; contraste con el mapeo automático de Wazuh |
+| Análisis de brechas de detección | Diagnóstico por capas: origen → recolección → transporte → reglas |
+| Telemetría de Windows | Eventos 4720, 4698, 4104; `auditpol`; Script Block Logging |
+| Administración de Wazuh | Configuración del agente (`ossec.conf`, eventchannel), búsquedas DQL, `archives.json` |
+| Triage de alertas | Identificación de un falso positivo (regla 91816) originado por los chequeos SCA |
 
 ---
 
@@ -33,11 +39,14 @@ Para medirlo se ejecutan técnicas de ataque reales y controladas con **Atomic R
 | Herramienta | Invoke-AtomicRedTeam + biblioteca de atomics |
 | Protección | Snapshot `Pre-atomic-red-team` (con RAM) antes de empezar |
 
+> ⚠️ Las simulaciones se ejecutaron solo en una VM de laboratorio aislada, con snapshot previo. La exclusión de Windows Defender sobre `C:\AtomicRedTeam` es exclusiva del laboratorio.
+
 ![Snapshot previo en Proxmox](capturas/01-snapshot-proxmox.png)
 
 ---
 
-## 🧪 Metodología
+<details>
+<summary><b>🧪 Metodología e instalación de Atomic Red Team</b></summary>
 
 Para cada técnica se siguió el mismo ciclo:
 
@@ -58,6 +67,8 @@ IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/mas
 Install-AtomicRedTeam -getAtomics -Force
 Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1" -Force
 ```
+
+</details>
 
 ---
 
@@ -168,30 +179,16 @@ Al activar el canal de PowerShell aparecieron alertas **91816** (*PowerShell scr
 
 ---
 
-## 🧠 Lecciones aprendidas
+## 🧠 Conclusiones
 
-1. **Visibilidad ≠ detección.** Hay cuatro puntos donde puede romperse: origen (auditoría), recolección (agente), transporte (manager) y reglas.
-2. **La configuración del endpoint importa tanto como el SIEM.** Sin auditoría ni logging, el SIEM está ciego.
-3. **El mapeo MITRE de Wazuh es parcial** y debe contrastarse con la técnica real.
-4. **Las alertas hay que validarlas**: los falsos positivos son parte del trabajo del analista.
-5. **Documentar también lo que NO se detecta** es lo que convierte un laboratorio en un análisis de brechas.
-
----
-
-## 🔭 Próximos pasos
-
-- **Proyecto 03:** Sysmon + reglas y decodificadores personalizados en Wazuh (visibilidad de línea de comandos, PowerShell codificado, ajuste del falso positivo 91816, mayor severidad para tareas programadas).
-- Repetir las técnicas tras el hardening (CIS) y comparar la cobertura.
+1. **Visibilidad no es detección.** El fallo puede estar en el origen (auditoría), la recolección (agente), el transporte (manager) o las reglas; hay que descartarlas en orden.
+2. **La configuración del endpoint importa tanto como el SIEM:** sin auditoría ni logging, el SIEM está ciego.
+3. **El mapeo MITRE automático es parcial** y debe contrastarse con la técnica real.
+4. **Las alertas se validan:** un falso positivo se descubre leyendo el evento original.
+5. **Documentar lo que NO se detecta** es lo que convierte un laboratorio en un análisis de brechas.
 
 ---
 
-## 📸 Registro de capturas
+## ➡️ Siguiente
 
-| Archivo | Contenido |
-|---|---|
-| `01` | Snapshot previo en Proxmox |
-| `02`–`03` | Lista y ejecución de T1136.001-4 |
-| `04`–`05` | Eventos y regla 60109 (T1098) |
-| `06`–`10` | T1053.005: sin detección, diagnóstico, corrección y detección |
-| `11`–`13` | T1059.001: ejecución, evento 4104 y evidencia en `archives.json` |
-| `14` | Falso positivo 91816 (SCA) |
+**Proyecto 03:** Sysmon + reglas y decodificadores personalizados en Wazuh para cerrar las brechas encontradas (PowerShell codificado, ajuste del falso positivo 91816, mayor severidad para tareas programadas).

@@ -1,36 +1,36 @@
-# 🛡️ Homelab Blue Team — Proyecto 01: Proxmox + Wazuh SIEM
+# 🛡️ Proyecto 01 — Homelab Blue Team: Proxmox + Wazuh SIEM
 
-> **Portfolio de Ciberseguridad** | Wilber Vidal  
+> **Wilber Vidal** · Aspirante a Analista SOC / Blue Team  
 > Formación: CertiPlus Cybersecurity Expert · Beca Talento Digital (INDOTEL) · Diplomado en Ciberseguridad y Ciberdefensa (Ministerio de Defensa, Rep. Dom.)
 
 ---
 
-## 📋 Descripción del Proyecto
+## 🎯 Resumen
 
-Construcción desde cero de un homelab de Blue Team sobre hardware físico reciclado (mini PC de empresa). El objetivo es desplegar un entorno realista de monitorización de seguridad con Proxmox VE como hipervisor, Wazuh SIEM como plataforma de detección, y un endpoint Windows 11 como objetivo de monitorización.
+**Problema:** un SOC necesita visibilidad centralizada de lo que ocurre en los equipos de una organización.  
+**Qué hice:** construí desde cero, sobre un mini PC de segunda mano, un laboratorio de monitorización de seguridad: hipervisor Proxmox, un SIEM Wazuh y un endpoint Windows 11 reportando eventos en tiempo real.  
+**Resultado:** laboratorio operativo con **2 máquinas virtuales**, **1 SIEM single-node (Wazuh 4.14.8)** y **1 agente activo** enviando telemetría. Sirve de base para los proyectos de detección posteriores.
 
-**Objetivo principal:** Demostrar competencias prácticas en:
-- Virtualización con Proxmox/KVM
-- Despliegue y configuración de SIEM (Wazuh)
-- Monitorización de endpoints Windows
-- Resolución de problemas reales en entornos de producción
+![Agente activo en Wazuh Dashboard](capturas/35-wazuh-agente-activo-dashboard.png)
 
----
+> 🇬🇧 **English summary:** Built a Blue Team homelab from scratch on refurbished hardware: Proxmox VE hypervisor, a self-hosted Wazuh 4.14.8 SIEM on Ubuntu Server, and a Windows 11 endpoint with an active Wazuh agent. Resolved real deployment issues (geo-blocked CDN, VirtIO drivers, insufficient RAM for the OVA) and documented everything with evidence.
 
-## 🖥️ Hardware Utilizado
+## 💼 Qué demuestra
 
-| Componente | Especificación |
+| Competencia | Evidencia en este proyecto |
 |---|---|
-| **Equipo** | HP EliteDesk 800 G3 DM 35W (mini PC) |
-| **CPU** | Intel Core i5-7500T @ 2.70 GHz (7ª gen), VT-x habilitado |
-| **RAM** | 12 GB (11.9 GB utilizables) |
-| **Almacenamiento** | NVMe 256 GB + SSHD 500 GB |
-| **Red** | Gigabit Ethernet |
-| **Equipo de trabajo** | Laptop HP Pavilion Gaming con Xubuntu |
+| Virtualización (KVM/Proxmox) | Instalación bare-metal, almacenamiento LVM-Thin + directorio de backups, VMs con VirtIO |
+| Despliegue de SIEM | Instalación y puesta en marcha de Wazuh (Manager, Indexer, Dashboard) |
+| Monitorización de endpoints | Agente Wazuh en Windows 11, enrolado y reportando |
+| Redes básicas | Reservas DHCP por MAC, segmentación interna, sin puertos expuestos a Internet |
+| Resolución de problemas | 8 incidencias reales diagnosticadas y resueltas (ver tabla abajo) |
+| Documentación técnica | Evidencias con capturas y datos sensibles ocultados |
 
 ---
 
 ## 🏗️ Arquitectura del Laboratorio
+
+**Hardware:** HP EliteDesk 800 G3 DM 35W reciclado (Intel Core i5-7500T, 12 GB RAM, NVMe 256 GB + SSHD 500 GB), gestionado desde una laptop con Xubuntu.
 
 ```
 Internet
@@ -54,9 +54,10 @@ HP EliteDesk 800 G3 — Proxmox VE 9.2.2 (10.0.0.50)
                └── Wazuh Agent 4.14.8 ← ACTIVO
 ```
 
+
 ---
 
-## 🔧 Stack Tecnológico
+## 🔧 Stack tecnológico
 
 | Componente | Versión | Rol |
 |---|---|---|
@@ -67,36 +68,52 @@ HP EliteDesk 800 G3 — Proxmox VE 9.2.2 (10.0.0.50)
 | VirtIO | 0.1.302 | Drivers de red KVM para Windows |
 | Remmina | — | Cliente RDP desde Xubuntu |
 
----
-
-## 📁 Estructura del Repositorio
-
-```
-homelab-proyecto-01/
-├── README.md                    ← Este archivo
-└── capturas/
-    ├── 01-… a 11-…  (Proxmox, red, almacenamiento)
-    ├── 20-wazuh-script-interno.png
-    ├── 21-wazuh-script-descarga-xubuntu-error.png
-    ├── 22-wazuh-script-descarga-correcto.png
-    ├── 23-wazuh-instalacion-inicio.png
-    ├── 24-wazuh-instalado-credenciales.png
-    ├── 25-wazuh-dashboard.png
-    ├── 26-proxmox-ram-disponible.png
-    ├── 27-windows-setup.png
-    ├── 28-windows-escritorio.png
-    ├── 29-wazuh-dashboard-sesion.png
-    ├── 30-wazuh-deploy-agente-cmd.png
-    ├── 31-windows-netkvm-driver.png
-    ├── 32-windows-wazuh-agent-ps-instalando.png
-    ├── 33-windows-rdp-remmina.png
-    ├── 34-windows-wazuh-agent-activo-ps.png
-    └── 35-wazuh-agente-activo-dashboard.png
-```
 
 ---
 
-## 🚀 Fases de Implementación
+## 🧩 Problemas reales resueltos
+
+| # | Problema | Causa | Solución |
+|---|---|---|---|
+| 1 | `parted: command not found` en Proxmox | Proxmox no incluye parted | Usar `sgdisk` (`apt install gdisk`) |
+| 2 | Wazuh OVA: servicios nunca arrancaban | RAM insuficiente (OVA requiere ~6GB libres, host tenía 12GB en total) | Cambiar a instalación manual sobre Ubuntu Server |
+| 3 | Error 403 al descargar `wazuh-install.sh` | CDN de Wazuh bloquea IPs del Caribe | Descargar desde Xubuntu (laptop) y transferir con SCP |
+| 4 | Script descargado con 0 o 14 bytes | URL incorrecta usada | URL correcta: `https://packages.wazuh.com/4.14/wazuh-install.sh` |
+| 5 | Warning: SO no soportado + RAM mínima | Ubuntu 26.04 no está en lista oficial; VM con 2GB al principio | Flag `-i` en el instalador: `sudo bash wazuh-install.sh -a -i` |
+| 6 | Sin red en Windows 11 VM post-install | VirtIO NIC requiere driver en Windows | Montar virtio-win ISO, instalar `NetKVM\w11\amd64\netkvm.inf` |
+| 7 | Sin portapapeles en noVNC | Limitación del cliente noVNC | Usar Remmina RDP para copiar/pegar comandos largos |
+| 8 | `qm terminal 100` → error "no serial interface" | VM OVA sin puerto serie configurado | `qm set 100 -serial0 socket` (aplicado antes de migrar a Ubuntu) |
+
+---
+
+## 🧠 Lo que aprendí
+
+- **Los proveedores de seguridad pueden bloquear regiones:** la descarga de Wazuh devolvía 403 desde República Dominicana; resolví usando otro equipo como relay y transfiriendo por SCP.
+- **Dimensionar recursos antes de desplegar:** la OVA de Wazuh no arrancaba con 12 GB de RAM compartidos; migré a una instalación manual sobre Ubuntu Server, más controlable.
+- **Virtualización con KVM:** las NIC VirtIO necesitan drivers en Windows (NetKVM); conviene tener la ISO `virtio-win` montada desde el inicio.
+- **Eficiencia operativa:** RDP (Remmina) en vez de la consola noVNC para copiar comandos largos; reservas DHCP por MAC en vez de IPs estáticas por VM.
+
+---
+
+## 🔒 Buenas prácticas de seguridad aplicadas
+
+- ✅ Ningún puerto abierto en el router hacia Internet: laboratorio 100 % interno
+- ✅ Credenciales fuera del repositorio
+- ✅ MACs e IPs públicas/IPv6 ocultas en las capturas
+- ✅ Todo el tráfico de monitorización dentro de 10.0.0.0/24
+
+---
+
+## ➡️ Siguiente
+
+El laboratorio sirve de base para el [Proyecto 02 — Atomic Red Team y análisis de detección](../02-atomic-red-team/README.md), donde simulo técnicas de ataque y mido qué detecta el SIEM.
+
+---
+
+<details>
+<summary><b>📖 Detalle técnico paso a paso (instalación y configuración)</b></summary>
+
+### Fases de implementación
 
 ### Fase 1 — Preparación del Hardware y Proxmox
 
@@ -373,24 +390,8 @@ Endpoints → Agents (1)
 
 **El agente Wazuh está activo y reportando al Manager. El laboratorio está operativo.** ✅
 
----
 
-## ❌ Problemas Encontrados y Soluciones
-
-| # | Problema | Causa | Solución |
-|---|---|---|---|
-| 1 | `parted: command not found` en Proxmox | Proxmox no incluye parted | Usar `sgdisk` (`apt install gdisk`) |
-| 2 | Wazuh OVA: servicios nunca arrancaban | RAM insuficiente (OVA requiere ~6GB libres, host tenía 12GB en total) | Cambiar a instalación manual sobre Ubuntu Server |
-| 3 | Error 403 al descargar `wazuh-install.sh` | CDN de Wazuh bloquea IPs del Caribe | Descargar desde Xubuntu (laptop) y transferir con SCP |
-| 4 | Script descargado con 0 o 14 bytes | URL incorrecta usada | URL correcta: `https://packages.wazuh.com/4.14/wazuh-install.sh` |
-| 5 | Warning: SO no soportado + RAM mínima | Ubuntu 26.04 no está en lista oficial; VM con 2GB al principio | Flag `-i` en el instalador: `sudo bash wazuh-install.sh -a -i` |
-| 6 | Sin red en Windows 11 VM post-install | VirtIO NIC requiere driver en Windows | Montar virtio-win ISO, instalar `NetKVM\w11\amd64\netkvm.inf` |
-| 7 | Sin portapapeles en noVNC | Limitación del cliente noVNC | Usar Remmina RDP para copiar/pegar comandos largos |
-| 8 | `qm terminal 100` → error "no serial interface" | VM OVA sin puerto serie configurado | `qm set 100 -serial0 socket` (aplicado antes de migrar a Ubuntu) |
-
----
-
-## 📸 Registro de Capturas
+### 📸 Registro de capturas
 
 | Archivo | Contenido |
 |---|---|
@@ -422,44 +423,7 @@ Endpoints → Agents (1)
 | `34-windows-wazuh-agent-activo-ps.png` | PowerShell: agente instalado + servicio Wazuh iniciado exitosamente |
 | `35-wazuh-agente-activo-dashboard.png` | Dashboard: windows-endpoint activo, IP 10.0.0.30, v4.14.8 |
 
----
-
-## 🎓 Lecciones Aprendidas
-
-1. **VirtIO en Windows requiere drivers adicionales.** Al crear una VM Windows en KVM/Proxmox con NIC VirtIO, Windows no la reconoce sin los drivers de VirtIO-Win. Siempre tener la ISO de `virtio-win` disponible como segundo CD-ROM durante la instalación.
-
-2. **Los CDNs de proveedores de seguridad pueden bloquear regiones.** Wazuh usa un CDN que bloqueaba peticiones desde IPs de República Dominicana. La solución fue usar un equipo con mejor conectividad como relay de descarga.
-
-3. **El script de Wazuh tiene flags para entornos no estándar.** El flag `-i` permite instalar en SOs no listados oficialmente y en hardware por debajo del mínimo recomendado, útil para laboratorios.
-
-4. **sgdisk vs parted en Proxmox.** Proxmox no incluye `parted` por defecto. `sgdisk` (parte del paquete `gdisk`) es el equivalente para discos GPT y está disponible sin instalación en Proxmox 8.x.
-
-5. **noVNC tiene limitaciones de portapapeles.** Para copiar comandos largos a una VM Windows en Proxmox, RDP (Remmina) es más práctico que la consola noVNC.
-
-6. **Las reservas DHCP por MAC son más simples que IPs estáticas** en un homelab doméstico con un solo router. Permiten mantener IPs fijas sin tocar la configuración de red de cada VM.
-
-7. **La OVA de Wazuh requiere recursos significativos.** Con un host de 12GB de RAM y otras VMs corriendo, la OVA de Wazuh (que requiere ~6GB libres) puede no arrancar correctamente. La instalación manual sobre Ubuntu Server es más controlable.
-
----
-
-## 🔒 Consideraciones de Seguridad
-
-- ✅ No se han abierto puertos en el router hacia Internet — el laboratorio es completamente interno
-- ✅ Las credenciales de Wazuh no están incluidas en este repositorio
-- ✅ Las MACs e IPs públicas han sido omitidas de las capturas y documentación
-- ✅ Las direcciones IPv6 globales (2001:1308:...) han sido excluidas
-- ✅ Todo el tráfico de monitorización es interno a la red 10.0.0.0/24
-
----
-
-## 🔮 Próximos Pasos
-
-- [ ] **Proyecto 02:** Generar alertas reales — simulación de ataques con Atomic Red Team o similar desde una VM Kali Linux
-- [ ] **Proyecto 03:** Configurar reglas personalizadas en Wazuh para detección de comportamientos anómalos
-- [ ] **Proyecto 04:** Integrar Suricata IDS como sensor de red y enviar sus logs a Wazuh
-- [ ] **Proyecto 05:** Desplegar un servidor vulnerable (Metasploitable/DVWA) y documentar el flujo completo ataque → detección → respuesta
-- [ ] Agregar más endpoints al SIEM (VM Linux, contenedor Docker)
-- [ ] Configurar alertas por email/Slack desde Wazuh
+</details>
 
 ---
 
@@ -469,8 +433,7 @@ Endpoints → Agents (1)
 - [Proxmox VE Wiki](https://pve.proxmox.com/wiki/Main_Page)
 - [VirtIO Drivers para Windows en KVM](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/)
 - [Tiny11 — Windows 11 compacto para laboratorio](https://github.com/ntdevlabs/tiny11builder)
-- [sgdisk man page](https://www.rodsbooks.com/gdisk/sgdisk-walkthrough.html)
 
 ---
 
-*Proyecto documentado el 8 de octubre de 2026 · Homelab Blue Team Novato · Rep. Dominicana*
+*Proyecto documentado el 8 de octubre de 2026 · Homelab Blue Team · Rep. Dominicana*
