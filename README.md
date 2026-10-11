@@ -454,7 +454,7 @@ Endpoints → Agents (1)
 
 ## 🔮 Próximos Pasos
 
-- [ ] **Proyecto 02:** Generar alertas reales — simulación de ataques con Atomic Red Team o similar desde una VM Kali Linux
+- [x] **Proyecto 02:** Generar alertas reales — simulación de ataques con Atomic Red Team o similar desde una VM Kali Linux
 - [ ] **Proyecto 03:** Configurar reglas personalizadas en Wazuh para detección de comportamientos anómalos
 - [ ] **Proyecto 04:** Integrar Suricata IDS como sensor de red y enviar sus logs a Wazuh
 - [ ] **Proyecto 05:** Desplegar un servidor vulnerable (Metasploitable/DVWA) y documentar el flujo completo ataque → detección → respuesta
@@ -470,3 +470,12 @@ Endpoints → Agents (1)
 - [VirtIO Drivers para Windows en KVM](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/)
 - [Tiny11 — Windows 11 compacto para laboratorio](https://github.com/ntdevlabs/tiny11builder)
 - [sgdisk man page](https://www.rodsbooks.com/gdisk/sgdisk-walkthrough.html)
+
+---
+
+## 📚 Índice de proyectos
+
+| # | Proyecto | Temas |
+|---|---|---|
+| 01 | [Proxmox + Wazuh SIEM](01-proxmox-wazuh/README.md) | Virtualización, SIEM, monitorización de endpoints |
+| 02 | [Atomic Red Team + análisis de detección](02-atomic-red-team/README.md) | MITRE ATT&CK, brechas de detección, auditoría de Windows |
