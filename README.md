@@ -4,6 +4,8 @@ Aspirante a **Analista SOC / Blue Team**. Construyo y documento un laboratorio d
 
 **Formación:** CertiPlus Cybersecurity Expert · Beca Talento Digital en Ciberseguridad, nivel intermedio y avanzado (INDOTEL) · Diplomado en Ciberseguridad y Ciberdefensa (Ministerio de Defensa, Rep. Dom.)
 
+**Contacto:** [LinkedIn — linkedin.com/in/wilbervidal](https://www.linkedin.com/in/wilbervidal)
+
 > 🇬🇧 **English:** Blue Team / SOC analyst candidate building a hands-on detection lab (Proxmox, Wazuh SIEM, Atomic Red Team, MITRE ATT&CK). Each project is documented with evidence, root-cause analysis and measurable results. Spanish and English speaker.
 
 ---
